@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -21,8 +24,9 @@ var filter = []string{
 	"C:\\Windows\\",
 }
 var (
-	processList []internal.Process
-	processName []string
+	processList  []internal.ProcessList
+	guiComponent []internal.GuiComponent
+	processName  []string
 )
 
 func init() {
@@ -35,7 +39,8 @@ func init() {
 		path, _ := p.Exe()
 		pid := p.Pid
 		if name != "" && filterCheck(path) {
-			processList = append(processList, internal.Process{
+			processList = append(processList, internal.ProcessList{
+				Pid:  pid,
 				Name: name,
 				Path: path,
 			})
@@ -47,7 +52,7 @@ func init() {
 func main() {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Choice Widgets")
-	myWindow.Resize(fyne.NewSize(400, 600))
+	myWindow.Resize(fyne.NewSize(600, 600))
 	myWindow.SetFixedSize(true)
 	myWindow.SetContent(initComponent())
 	myWindow.ShowAndRun()
@@ -55,22 +60,53 @@ func main() {
 
 func initComponent() *fyne.Container {
 	for _, process := range processList {
-		processName = append(processName, process.Name)
+		processName = append(processName, fmt.Sprintf("%s <%d>", process.Name, process.Pid))
 	}
 	combo := widget.NewSelect(processName, func(value string) {
+		re := regexp.MustCompile(`<([^>]+)>`)
+		match := re.FindStringSubmatch(value)
+		num, err := strconv.ParseInt(match[1], 10, 32)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, p := range processList {
+			if p.Pid == int32(num) {
+				for _, c := range guiComponent {
+					if c.Name == "PathLabel" {
+						if lbl, ok := c.Item.(*widget.Label); ok {
+							lbl.SetText(p.Path)
+						}
+					}
+				}
+			}
+		}
 		log.Println("Select set to", value)
 	})
 	combo.PlaceHolder = "選擇"
 	content := widget.NewLabel("新增軟體: ")
 	comboContainer := container.New(layout.NewGridWrapLayout(fyne.NewSize(200, 40)), combo)
-	centeredContainer := container.NewHBox(content, comboContainer, layout.NewSpacer())
 
-	return centeredContainer
+	pathLabel := widget.NewLabel("")
+	pathLabel.TextStyle = fyne.TextStyle{
+		Bold:   true,
+		Italic: true,
+	}
+	guiComponent = append(guiComponent, internal.GuiComponent{
+		Name: "PathLabel",
+		Item: pathLabel,
+	})
+
+	box := container.NewVBox(
+		container.NewHBox(content, comboContainer, layout.NewSpacer()),
+		container.NewHBox(pathLabel),
+	)
+
+	return box
 }
 
 func filterCheck(path string) bool {
-	for _, prefix := range filter {
-		if strings.HasPrefix(path, prefix) {
+	for _, p := range filter {
+		if strings.HasPrefix(path, p) {
 			return false
 		}
 	}

@@ -1,6 +1,12 @@
 package internal
 
-type Process struct {
+type ProcessList struct {
+	Pid  int32
 	Name string
 	Path string
+}
+
+type GuiComponent struct {
+	Name string
+	Item interface{}
 }
