@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,18 +20,24 @@ import (
 	"processchronicle/internal"
 )
 
-var filter = []string{
-	"C:\\Program Files\\",
-	"C:\\Program Files (x86)\\",
-	"C:\\Windows\\",
-}
 var (
+	data         internal.DataForJson
 	processList  []internal.ProcessList
 	guiComponent []internal.GuiComponent
 	processName  []string
 )
 
 func init() {
+	// get filter data
+	file, err := os.ReadFile("data.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// traverse all processes
 	processes, err := process.Processes()
 	if err != nil {
 		log.Fatalf("Error fetching processes: %v", err)
@@ -38,7 +46,7 @@ func init() {
 		name, _ := p.Name()
 		path, _ := p.Exe()
 		pid := p.Pid
-		if name != "" && filterCheck(path) {
+		if name != "" && path != "" && filterCheck(path) {
 			processList = append(processList, internal.ProcessList{
 				Pid:  pid,
 				Name: name,
@@ -106,7 +114,7 @@ func initComponent() *fyne.Container {
 }
 
 func filterCheck(path string) bool {
-	for _, p := range filter {
+	for _, p := range data.Filter {
 		if strings.HasPrefix(path, p) {
 			return false
 		}
