@@ -7,11 +7,6 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-type Win32_Process struct {
-	Name           string
-	ExecutablePath string
-}
-
 var pid int32 = 0
 
 func CheckProcess() {
