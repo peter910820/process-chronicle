@@ -20,17 +20,17 @@ func main() {
 	}
 	for _, p := range processes {
 		name, _ := p.Name()
-		route, _ := p.Exe()
+		path, _ := p.Exe()
 		pid := p.Pid
-		if name != "" && filterCheck(route) {
-			log.Printf("PID: %d, Name: %s\n", pid, route)
+		if name != "" && filterCheck(path) {
+			log.Printf("PID: %d, Name: %s\n", pid, path)
 		}
 	}
 }
 
-func filterCheck(route string) bool {
+func filterCheck(path string) bool {
 	for _, prefix := range filter {
-		if strings.HasPrefix(route, prefix) {
+		if strings.HasPrefix(path, prefix) {
 			return false
 		}
 	}
