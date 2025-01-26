@@ -47,6 +47,7 @@ func init() {
 			log.Printf("PID: %d, Name: %s\n", pid, path)
 		}
 	}
+	go internal.CheckProcess()
 }
 
 func main() {
