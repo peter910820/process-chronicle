@@ -100,14 +100,16 @@ func initComponent() *fyne.Container {
 		Bold:   true,
 		Italic: true,
 	}
-	guiComponent = append(guiComponent, internal.GuiComponent{
-		Name: "PathLabel",
-		Item: pathLabel,
+	registerComponent("PathLabel", pathLabel)
+	registerButton := widget.NewButton("click me", func() {
+		log.Println("tapped")
 	})
+	registerComponent("RegisterComponent", registerButton)
 
 	box := container.NewVBox(
 		container.NewHBox(content, comboContainer, layout.NewSpacer()),
 		container.NewHBox(pathLabel),
+		container.NewHBox(registerButton),
 	)
 
 	return box
@@ -120,4 +122,11 @@ func filterCheck(path string) bool {
 		}
 	}
 	return true
+}
+
+func registerComponent(name string, component interface{}) {
+	guiComponent = append(guiComponent, internal.GuiComponent{
+		Name: name,
+		Item: component,
+	})
 }
