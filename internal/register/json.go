@@ -7,6 +7,7 @@ import (
 )
 
 type RegisterList struct {
+	Alias      string
 	Path       string
 	TotalTime  string
 	LastOpened string
@@ -29,18 +30,7 @@ func RegisterForJson(path string) error {
 		LastOpened: now.Format("2006-01-02 15:04:05"),
 	})
 
-	jsonData, err := json.MarshalIndent(&data, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	fileWrite, err := os.OpenFile("data.json", os.O_RDWR|os.O_TRUNC, 0666)
-	if err != nil {
-		return err
-	}
-	defer fileWrite.Close()
-
-	_, err = fileWrite.Write(jsonData)
+	err = WriteForJson(data)
 	if err != nil {
 		return err
 	}
@@ -72,4 +62,23 @@ func ReadForJson(path ...string) (*DataForJson, error) {
 		}
 	}
 	return &data, nil
+}
+
+func WriteForJson(data *DataForJson) error {
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fileWrite, err := os.OpenFile("data.json", os.O_RDWR|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer fileWrite.Close()
+
+	_, err = fileWrite.Write(jsonData)
+	if err != nil {
+		return err
+	}
+	return nil
 }
