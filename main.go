@@ -18,6 +18,8 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 
 	"processchronicle/internal"
+	"processchronicle/internal/register"
+	// "processchronicle/internal/register"
 )
 
 var (
@@ -101,8 +103,12 @@ func initComponent() *fyne.Container {
 		Italic: true,
 	}
 	registerComponent("PathLabel", pathLabel)
+
 	registerButton := widget.NewButton("click me", func() {
-		log.Println("tapped")
+		err := register.RegisterForJson(pathLabel.Text)
+		if err != nil {
+			log.Fatal(err)
+		}
 	})
 	registerComponent("RegisterComponent", registerButton)
 
