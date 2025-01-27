@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,11 +17,9 @@ import (
 
 	"processchronicle/internal"
 	"processchronicle/internal/register"
-	// "processchronicle/internal/register"
 )
 
 var (
-	data         internal.DataForJson
 	processList  []internal.ProcessList
 	guiComponent []internal.GuiComponent
 	processName  []string
@@ -31,11 +27,7 @@ var (
 
 func init() {
 	// get filter data
-	file, err := os.ReadFile("data.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = json.Unmarshal(file, &data)
+	data, err := register.ReadForJson()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +40,7 @@ func init() {
 		name, _ := p.Name()
 		path, _ := p.Exe()
 		pid := p.Pid
-		if name != "" && path != "" && filterCheck(path) {
+		if name != "" && path != "" && filterCheck(data, path) {
 			processList = append(processList, internal.ProcessList{
 				Pid:  pid,
 				Name: name,
@@ -57,7 +49,6 @@ func init() {
 			log.Printf("PID: %d, Name: %s\n", pid, path)
 		}
 	}
-	go internal.CheckProcess()
 }
 
 func main() {
@@ -104,7 +95,7 @@ func initComponent() *fyne.Container {
 	}
 	registerComponent("PathLabel", pathLabel)
 
-	registerButton := widget.NewButton("click me", func() {
+	registerButton := widget.NewButton("註冊程式", func() {
 		err := register.RegisterForJson(pathLabel.Text)
 		if err != nil {
 			log.Fatal(err)
@@ -112,16 +103,24 @@ func initComponent() *fyne.Container {
 	})
 	registerComponent("RegisterComponent", registerButton)
 
+	timerLabel := widget.NewLabel("")
+	timerLabel.TextStyle = fyne.TextStyle{
+		Bold:      true,
+		Monospace: true,
+	}
+	registerComponent("TimerLabel", timerLabel)
+
 	box := container.NewVBox(
 		container.NewHBox(content, comboContainer, layout.NewSpacer()),
 		container.NewHBox(pathLabel),
 		container.NewHBox(registerButton),
+		container.NewHBox(layout.NewSpacer(), timerLabel, layout.NewSpacer()),
 	)
-
+	go internal.CheckProcess(guiComponent)
 	return box
 }
 
-func filterCheck(path string) bool {
+func filterCheck(data *register.DataForJson, path string) bool {
 	for _, p := range data.Filter {
 		if strings.HasPrefix(path, p) {
 			return false

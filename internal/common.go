@@ -10,14 +10,3 @@ type GuiComponent struct {
 	Name string
 	Item interface{}
 }
-
-type RegisterList struct {
-	Path       string
-	TotalTime  string
-	LastOpened string
-}
-
-type DataForJson struct {
-	Filter   []string       `json:"filter"`
-	Register []RegisterList `json:"register"`
-}

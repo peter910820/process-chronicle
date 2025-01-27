@@ -4,25 +4,27 @@ import (
 	"encoding/json"
 	"os"
 	"time"
-
-	"processchronicle/internal"
 )
 
-var data internal.DataForJson
+type RegisterList struct {
+	Path       string
+	TotalTime  string
+	LastOpened string
+}
+
+type DataForJson struct {
+	Filter   []string       `json:"filter"`
+	Register []RegisterList `json:"register"`
+}
 
 func RegisterForJson(path string) error {
-	// get filter data
-	fileRead, err := os.ReadFile("data.json")
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(fileRead, &data)
+	data, err := ReadForJson()
 	if err != nil {
 		return err
 	}
 
 	now := time.Now()
-	data.Register = append(data.Register, internal.RegisterList{
+	data.Register = append(data.Register, RegisterList{
 		Path:       path,
 		LastOpened: now.Format("2006-01-02 15:04:05"),
 	})
@@ -44,4 +46,30 @@ func RegisterForJson(path string) error {
 	}
 
 	return nil
+}
+
+func ReadForJson(path ...string) (*DataForJson, error) {
+	var data DataForJson
+	// get filter data
+	if len(path) == 0 {
+		fileRead, err := os.ReadFile("data.json")
+		if err != nil {
+			return &data, err
+		}
+		err = json.Unmarshal(fileRead, &data)
+		if err != nil {
+			return &data, err
+		}
+
+	} else {
+		fileRead, err := os.ReadFile(path[0])
+		if err != nil {
+			return &data, err
+		}
+		err = json.Unmarshal(fileRead, &data)
+		if err != nil {
+			return &data, err
+		}
+	}
+	return &data, nil
 }
