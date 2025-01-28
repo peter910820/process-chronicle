@@ -31,6 +31,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Read record file complete")
 	// traverse all processes
 	processes, err := process.Processes()
 	if err != nil {

@@ -2,6 +2,7 @@ package register
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"time"
 )
@@ -16,6 +17,31 @@ type RegisterList struct {
 type DataForJson struct {
 	Filter   []string       `json:"filter"`
 	Register []RegisterList `json:"register"`
+}
+
+func CreateForJson() []byte {
+	file, err := os.Create("data.json")
+	if err != nil {
+		log.Fatalf("create record file error: %s", err)
+	}
+	defer file.Close()
+
+	data := DataForJson{}
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = file.Write(jsonData)
+	if err != nil {
+		log.Fatalf("write record file error: %s", err)
+	}
+
+	returnfile, err := os.ReadFile("data.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return returnfile
 }
 
 func RegisterForJson(path string) error {
@@ -39,28 +65,33 @@ func RegisterForJson(path string) error {
 }
 
 func ReadForJson(path ...string) (*DataForJson, error) {
+	// defined variable
 	var data DataForJson
+	var file []byte
+	var err error
+
 	// get filter data
 	if len(path) == 0 {
-		fileRead, err := os.ReadFile("data.json")
+		file, err = os.ReadFile("data.json")
 		if err != nil {
-			return &data, err
+			if os.IsNotExist(err) {
+				file = CreateForJson()
+			} else {
+				return &data, err
+			}
 		}
-		err = json.Unmarshal(fileRead, &data)
-		if err != nil {
-			return &data, err
-		}
-
 	} else {
-		fileRead, err := os.ReadFile(path[0])
-		if err != nil {
-			return &data, err
-		}
-		err = json.Unmarshal(fileRead, &data)
+		file, err = os.ReadFile(path[0])
 		if err != nil {
 			return &data, err
 		}
 	}
+
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		return &data, err
+	}
+
 	return &data, nil
 }
 
