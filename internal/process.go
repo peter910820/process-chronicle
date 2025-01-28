@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2/widget"
@@ -12,9 +13,14 @@ import (
 	"processchronicle/internal/register"
 )
 
-var pid int32 = 0
-var alias string
-var counter = 0
+var (
+	alias   string
+	pid     int32 = 0
+	counter       = 0
+
+	RequestChan  = make(chan struct{})
+	ResponseChan = make(chan int)
+)
 
 func CheckProcess(guiComponent []GuiComponent) {
 	data, err := register.ReadForJson()
@@ -22,12 +28,18 @@ func CheckProcess(guiComponent []GuiComponent) {
 		log.Fatal(err)
 	}
 	for {
-		if pid == 0 {
-			checkProcessOpen(data)
-		} else {
-			checkProcessClose(guiComponent)
+		select {
+		case <-RequestChan:
+			ResponseChan <- counter
+		default:
+			if pid == 0 {
+				checkProcessOpen(data)
+			} else {
+				checkProcessClose(guiComponent)
+			}
+			time.Sleep(1 * time.Second)
 		}
-		time.Sleep(1 * time.Second)
+
 	}
 }
 
@@ -53,7 +65,7 @@ func checkProcessOpen(data *register.DataForJson) {
 func checkProcessClose(guiComponent []GuiComponent) {
 	processes, err := process.Processes()
 	if err != nil {
-		log.Fatalf("Error fetching processes: %v", err)
+		log.Fatalf("error fetching processes: %v", err)
 	}
 	for _, p := range processes {
 		if p.Pid == pid {
@@ -75,13 +87,24 @@ func checkProcessClose(guiComponent []GuiComponent) {
 	}
 	for i, p := range data.Register {
 		if alias == p.Alias {
-			data.Register[i].TotalTime = fmt.Sprintf("%d", counter)
+			originalTotalTime, err := strconv.Atoi(p.TotalTime)
+			if err != nil {
+				log.Fatal(err)
+			}
+			data.Register[i].TotalTime = fmt.Sprintf("%d", originalTotalTime+counter)
 
-			err := register.WriteForJson(data)
+			err = register.WriteForJson(data)
 			if err != nil {
 				log.Fatal(err)
 			}
 			break
+		}
+	}
+	for _, c := range guiComponent {
+		if c.Name == "TimerLabel" {
+			if lbl, ok := c.Item.(*widget.Label); ok {
+				lbl.SetText("")
+			}
 		}
 	}
 	log.Println("程式關閉")

@@ -53,15 +53,22 @@ func init() {
 }
 
 func main() {
+	guiComponent, box := initComponent()
+	go internal.CheckProcess(guiComponent)
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Choice Widgets")
+	myWindow.SetCloseIntercept(func() {
+		internal.RequestChan <- struct{}{}
+		log.Print(<-internal.ResponseChan)
+		myApp.Quit()
+	})
 	myWindow.Resize(fyne.NewSize(600, 600))
 	myWindow.SetFixedSize(true)
-	myWindow.SetContent(initComponent())
+	myWindow.SetContent(box)
 	myWindow.ShowAndRun()
 }
 
-func initComponent() *fyne.Container {
+func initComponent() ([]internal.GuiComponent, *fyne.Container) {
 	for _, process := range processList {
 		processName = append(processName, fmt.Sprintf("%s <%d>", process.Name, process.Pid))
 	}
@@ -117,8 +124,7 @@ func initComponent() *fyne.Container {
 		container.NewHBox(registerButton),
 		container.NewHBox(layout.NewSpacer(), timerLabel, layout.NewSpacer()),
 	)
-	go internal.CheckProcess(guiComponent)
-	return box
+	return guiComponent, box
 }
 
 func filterCheck(data *register.DataForJson, path string) bool {

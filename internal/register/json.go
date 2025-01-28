@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,11 @@ type RegisterList struct {
 type DataForJson struct {
 	Filter   []string       `json:"filter"`
 	Register []RegisterList `json:"register"`
+}
+
+type ChannelForJson struct {
+	Alias   string
+	Counter int
 }
 
 func CreateForJson() []byte {
@@ -51,7 +57,9 @@ func RegisterForJson(path string) error {
 	}
 
 	now := time.Now()
+	pathSlice := strings.Split(path, "\\")
 	data.Register = append(data.Register, RegisterList{
+		Alias:      pathSlice[len(pathSlice)-1],
 		Path:       path,
 		LastOpened: now.Format("2006-01-02 15:04:05"),
 	})
