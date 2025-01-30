@@ -73,24 +73,18 @@ func RegisterForJson(path string) error {
 }
 
 func ReadForJson(path ...string) (*DataForJson, error) {
-	// defined variable
-	var data DataForJson
-	var file []byte
-	var err error
+	data := DataForJson{}
+	filePath := "data.json"
 
+	if len(path) != 0 {
+		filePath = path[0]
+	}
 	// get filter data
-	if len(path) == 0 {
-		file, err = os.ReadFile("data.json")
-		if err != nil {
-			if os.IsNotExist(err) {
-				file = CreateForJson()
-			} else {
-				return &data, err
-			}
-		}
-	} else {
-		file, err = os.ReadFile(path[0])
-		if err != nil {
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			file = CreateForJson()
+		} else {
 			return &data, err
 		}
 	}
@@ -103,13 +97,17 @@ func ReadForJson(path ...string) (*DataForJson, error) {
 	return &data, nil
 }
 
-func WriteForJson(data *DataForJson) error {
+func WriteForJson(data *DataForJson, path ...string) error {
+	filePath := "data.json"
+	if len(path) != 0 {
+		filePath = path[0]
+	}
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	fileWrite, err := os.OpenFile("data.json", os.O_RDWR|os.O_TRUNC, 0666)
+	fileWrite, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
