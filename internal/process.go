@@ -36,7 +36,7 @@ func CheckProcess(guiComponent []GuiComponent) {
 			ResponseChan <- channelData
 		default:
 			if pid == 0 {
-				checkProcessOpen(data)
+				checkProcessOpen(data, guiComponent)
 			} else {
 				checkProcessClose(guiComponent)
 			}
@@ -46,11 +46,12 @@ func CheckProcess(guiComponent []GuiComponent) {
 	}
 }
 
-func checkProcessOpen(data *register.DataForJson) {
+func checkProcessOpen(data *register.DataForJson, guiComponent []GuiComponent) {
 	processes, err := process.Processes()
 	if err != nil {
 		log.Fatalf("Error fetching processes: %v", err)
 	}
+outer:
 	for _, p := range processes {
 		path, _ := p.Exe()
 		for _, pro := range data.Register {
@@ -58,7 +59,14 @@ func checkProcessOpen(data *register.DataForJson) {
 				pid = p.Pid
 				alias = pro.Alias
 				log.Println("程式啟動中")
-				break
+				for _, c := range guiComponent {
+					if c.Name == "ProcessLabel" {
+						if lbl, ok := c.Item.(*widget.Label); ok {
+							lbl.SetText(alias)
+						}
+					}
+				}
+				break outer
 			}
 		}
 
@@ -76,7 +84,7 @@ func checkProcessClose(guiComponent []GuiComponent) {
 				if c.Name == "TimerLabel" {
 					if lbl, ok := c.Item.(*widget.Label); ok {
 						counter += 1
-						lbl.SetText(fmt.Sprintf("%d", counter))
+						lbl.SetText((time.Duration(counter) * time.Second).String())
 					}
 				}
 			}

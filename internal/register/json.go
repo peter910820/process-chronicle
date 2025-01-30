@@ -2,6 +2,7 @@ package register
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"strings"
@@ -55,6 +56,9 @@ func CreateForJson(path string) []byte {
 
 // register process into json record file
 func RegisterForJson(path string) error {
+	if strings.TrimSpace(path) == "" {
+		return errors.New("path cannot be empty")
+	}
 	data, err := ReadForJson()
 	if err != nil {
 		return err

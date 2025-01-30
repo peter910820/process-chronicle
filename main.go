@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 
@@ -23,6 +24,8 @@ var (
 	processList  []internal.ProcessList
 	guiComponent []internal.GuiComponent
 	processName  []string
+
+	myWindow fyne.Window
 )
 
 func init() {
@@ -47,7 +50,7 @@ func init() {
 				Name: name,
 				Path: path,
 			})
-			log.Printf("PID: %d, Name: %s\n", pid, path)
+			log.Printf("PID: %d, Path: %s\n", pid, path)
 		}
 	}
 }
@@ -56,7 +59,7 @@ func main() {
 	guiComponent, box := initComponent()
 	go internal.CheckProcess(guiComponent)
 	myApp := app.New()
-	myWindow := myApp.NewWindow("Choice Widgets")
+	myWindow = myApp.NewWindow("Choice Widgets")
 	myWindow.SetCloseIntercept(func() {
 		internal.RequestChan <- struct{}{}
 		data := <-internal.ResponseChan
@@ -126,10 +129,17 @@ func initComponent() ([]internal.GuiComponent, *fyne.Container) {
 	registerButton := widget.NewButton("註冊程式", func() {
 		err := register.RegisterForJson(pathLabel.Text)
 		if err != nil {
-			log.Fatal(err)
+			dialog.NewError(err, myWindow).Show()
 		}
 	})
 	registerComponent("RegisterComponent", registerButton)
+
+	processLabel := widget.NewLabel("")
+	processLabel.TextStyle = fyne.TextStyle{
+		Bold:      true,
+		Monospace: true,
+	}
+	registerComponent("ProcessLabel", processLabel)
 
 	timerLabel := widget.NewLabel("")
 	timerLabel.TextStyle = fyne.TextStyle{
@@ -142,6 +152,7 @@ func initComponent() ([]internal.GuiComponent, *fyne.Container) {
 		container.NewHBox(content, comboContainer, layout.NewSpacer()),
 		container.NewHBox(pathLabel),
 		container.NewHBox(registerButton),
+		container.NewHBox(layout.NewSpacer(), processLabel, layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(), timerLabel, layout.NewSpacer()),
 	)
 	return guiComponent, box
@@ -150,6 +161,11 @@ func initComponent() ([]internal.GuiComponent, *fyne.Container) {
 func filterCheck(data *register.DataForJson, path string) bool {
 	for _, p := range data.Filter {
 		if strings.HasPrefix(path, p) {
+			return false
+		}
+	}
+	for _, p := range processList {
+		if p.Path == path {
 			return false
 		}
 	}
