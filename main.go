@@ -59,7 +59,27 @@ func main() {
 	myWindow := myApp.NewWindow("Choice Widgets")
 	myWindow.SetCloseIntercept(func() {
 		internal.RequestChan <- struct{}{}
-		log.Print(<-internal.ResponseChan)
+		data := <-internal.ResponseChan
+		record, err := register.ReadForJson()
+		if err != nil {
+			log.Fatal(err)
+		}
+		for i, r := range record.Register {
+			if r.Alias == data.Alias {
+				originalTotalTime, err := strconv.Atoi(r.TotalTime)
+				if err != nil {
+					log.Fatal(err)
+				}
+				record.Register[i].TotalTime = fmt.Sprintf("%d", originalTotalTime+data.Counter)
+
+				err = register.WriteForJson(record)
+				if err != nil {
+					log.Fatal(err)
+				}
+				break
+			}
+		}
+		log.Print(data)
 		myApp.Quit()
 	})
 	myWindow.Resize(fyne.NewSize(600, 600))

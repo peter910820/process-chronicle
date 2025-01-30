@@ -14,12 +14,11 @@ import (
 )
 
 var (
-	alias   string
-	pid     int32 = 0
-	counter       = 0
-
-	RequestChan  = make(chan struct{})
-	ResponseChan = make(chan int)
+	alias        string
+	pid          int32 = 0
+	counter            = 0
+	RequestChan        = make(chan struct{})
+	ResponseChan       = make(chan register.ChannelForJson)
 )
 
 func CheckProcess(guiComponent []GuiComponent) {
@@ -30,7 +29,11 @@ func CheckProcess(guiComponent []GuiComponent) {
 	for {
 		select {
 		case <-RequestChan:
-			ResponseChan <- counter
+			channelData := register.ChannelForJson{
+				Alias:   alias,
+				Counter: counter,
+			}
+			ResponseChan <- channelData
 		default:
 			if pid == 0 {
 				checkProcessOpen(data)

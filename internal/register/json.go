@@ -20,19 +20,22 @@ type DataForJson struct {
 	Register []RegisterList `json:"register"`
 }
 
+// the channel to send subprocess(timer) data when mainprocess close
 type ChannelForJson struct {
 	Alias   string
 	Counter int
 }
 
-func CreateForJson() []byte {
-	file, err := os.Create("data.json")
+// create json record file when the json record file is not exist
+func CreateForJson(path string) []byte {
+	data := DataForJson{}
+
+	file, err := os.Create(path)
 	if err != nil {
 		log.Fatalf("create record file error: %s", err)
 	}
 	defer file.Close()
 
-	data := DataForJson{}
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Fatal(err)
@@ -43,13 +46,14 @@ func CreateForJson() []byte {
 		log.Fatalf("write record file error: %s", err)
 	}
 
-	returnfile, err := os.ReadFile("data.json")
+	returnfile, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return returnfile
 }
 
+// register process into json record file
 func RegisterForJson(path string) error {
 	data, err := ReadForJson()
 	if err != nil {
@@ -61,6 +65,7 @@ func RegisterForJson(path string) error {
 	data.Register = append(data.Register, RegisterList{
 		Alias:      pathSlice[len(pathSlice)-1],
 		Path:       path,
+		TotalTime:  "0",
 		LastOpened: now.Format("2006-01-02 15:04:05"),
 	})
 
@@ -72,6 +77,7 @@ func RegisterForJson(path string) error {
 	return nil
 }
 
+// read the json record file
 func ReadForJson(path ...string) (*DataForJson, error) {
 	data := DataForJson{}
 	filePath := "data.json"
@@ -83,7 +89,7 @@ func ReadForJson(path ...string) (*DataForJson, error) {
 	file, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			file = CreateForJson()
+			file = CreateForJson(filePath)
 		} else {
 			return &data, err
 		}
@@ -97,6 +103,7 @@ func ReadForJson(path ...string) (*DataForJson, error) {
 	return &data, nil
 }
 
+// write the json record file
 func WriteForJson(data *DataForJson, path ...string) error {
 	filePath := "data.json"
 	if len(path) != 0 {

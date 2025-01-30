@@ -6,6 +6,7 @@ type ProcessList struct {
 	Path string
 }
 
+// gui component list
 type GuiComponent struct {
 	Name string
 	Item interface{}
