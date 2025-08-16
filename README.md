@@ -9,7 +9,7 @@ a process timer record for windows
 4. follow [this](https://docs.fyne.io/) to build the environment
 5. use `go run .\main.go` to run project  
 
-資料儲存
+## 資料儲存
 * filter:
     * prefix(route): 要過濾的程式(前綴)
 * register:
