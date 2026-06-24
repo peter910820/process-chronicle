@@ -17,3 +17,6 @@ a process timer record for windows
     * path: 程式路徑
     * totalTime: 總開啟時間
     * lastOpened: 最後開啟日期
+
+## TODO
+- [ ] LastOpened未在關閉程式時更新

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/shirou/gopsutil/v4/process"
@@ -59,13 +60,15 @@ outer:
 				pid = p.Pid
 				alias = pro.Alias
 				log.Println("程式啟動中")
-				for _, c := range guiComponent {
-					if c.Name == "ProcessLabel" {
-						if lbl, ok := c.Item.(*widget.Label); ok {
-							lbl.SetText(alias)
+				fyne.Do(func() {
+					for _, c := range guiComponent {
+						if c.Name == "ProcessLabel" {
+							if lbl, ok := c.Item.(*widget.Label); ok {
+								lbl.SetText(alias)
+							}
 						}
 					}
-				}
+				})
 				break outer
 			}
 		}
@@ -80,14 +83,17 @@ func checkProcessClose(guiComponent []GuiComponent) {
 	}
 	for _, p := range processes {
 		if p.Pid == pid {
-			for _, c := range guiComponent {
-				if c.Name == "TimerLabel" {
-					if lbl, ok := c.Item.(*widget.Label); ok {
-						counter += 1
-						lbl.SetText((time.Duration(counter) * time.Second).String())
+			counter += 1
+			timerText := (time.Duration(counter) * time.Second).String()
+			fyne.Do(func() {
+				for _, c := range guiComponent {
+					if c.Name == "TimerLabel" {
+						if lbl, ok := c.Item.(*widget.Label); ok {
+							lbl.SetText(timerText)
+						}
 					}
 				}
-			}
+			})
 			return
 		}
 	}
@@ -111,12 +117,14 @@ func checkProcessClose(guiComponent []GuiComponent) {
 			break
 		}
 	}
-	for _, c := range guiComponent {
-		if c.Name == "TimerLabel" {
-			if lbl, ok := c.Item.(*widget.Label); ok {
-				lbl.SetText("")
+	fyne.Do(func() {
+		for _, c := range guiComponent {
+			if c.Name == "TimerLabel" {
+				if lbl, ok := c.Item.(*widget.Label); ok {
+					lbl.SetText("")
+				}
 			}
 		}
-	}
+	})
 	log.Println("程式關閉")
 }
